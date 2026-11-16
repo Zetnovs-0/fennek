@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f1a" />
+  <meta name="description" content="ФЕНЁК — маленькая воксельная история о подростке, строгих родителях и одном выборе, который меняет всё." />
+  <title>ФЕНЁК — история одного выбора</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230e1320'/><path d='M6 25V10l7-5v7l3-2 3 2V5l7 5v15z' fill='%23e7b273'/><rect x='12' y='17' width='8' height='3' fill='%232c2323'/></svg>" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div id="game-root">
+    <canvas id="stage" aria-label="Воксельный мир игры"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- HUD -->
+    <header id="hud" class="hud hidden">
+      <div class="hud-left">
+        <button id="menu-btn" class="icon-btn menu-btn" aria-label="Открыть меню" title="Меню">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="chapter-box">
+          <div class="chapter-row">
+            <span id="chapter-label" class="chapter-label">Глава 1</span>
+            <span class="chapter-divider"></span>
+            <span id="location-label" class="location-label">Квартира</span>
+          </div>
+          <div id="chapter-title" class="chapter-title">Свой угол</div>
+          <div id="objective" class="objective"><span class="objective-dot"></span><span id="objective-text"></span></div>
+        </div>
+      </div>
+      <div class="hud-right">
+        <div id="stats" class="stats" aria-label="Характеристики"></div>
+        <button id="mute-btn" class="icon-btn mute-btn" aria-label="Выключить звук" title="Звук">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h3.5L12 5v14l-4.5-4H4z"/><path class="wave" d="M15 9.2c1.1 1.5 1.1 4.1 0 5.6M17.6 6.8c2.3 2.8 2.3 7.6 0 10.4"/><path class="slash" d="M4 4l16 16"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Title -->
+    <section id="title-screen" class="screen title-screen">
+      <div class="title-content">
+        <div class="title-eyebrow"><span class="rule"></span>интерактивная воксельная история<span class="rule"></span></div>
+        <h1 class="title-logo" aria-label="Фенёк"><span>Ф</span><span>Е</span><span>Н</span><span>Ё</span><span>К</span></h1>
+        <p class="title-sub">история одного выбора</p>
+        <p class="title-lead">Один вечер. Один двор.<br />Одно существо, которое смотрит на тебя так,<br class="wide-only" /> будто ты — целый мир.</p>
+        <div class="title-buttons">
+          <button id="btn-new" class="btn btn-primary"><span class="btn-arrow">▸</span> Новая история</button>
+          <button id="btn-continue" class="btn btn-ghost hidden"><span class="btn-dot"></span> Продолжить</button>
+          <button id="btn-gallery" class="btn btn-ghost">Концовки <span id="gallery-count" class="btn-count">0/8</span></button>
+        </div>
+        <div class="title-meta">
+          <span>воксельная история</span><span class="dot">·</span><span>8 концовок</span><span class="dot">·</span><span>20–30 минут</span>
+        </div>
+      </div>
+      <div class="title-footer">
+        <span>совет: оглядывайся по сторонам — некоторые вещи важнее сюжета</span>
+        <span class="title-controls">WASD · мышь · E</span>
+      </div>
+    </section>
+
+    <!-- Character creation -->
+    <section id="creator" class="screen creator hidden">
+      <div class="creator-panel">
+        <button id="creator-back" class="back-btn">← Назад</button>
+        <p class="eyebrow">создание персонажа</p>
+        <h2 class="creator-title">Кто ты?</h2>
+        <p class="creator-lead">Собери себя из кубиков. Имя и мечта останутся с тобой.</p>
+
+        <label class="field-label" for="name-input">Имя</label>
+        <input id="name-input" class="name-input" type="text" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Как тебя зовут?" value="Алекс" />
+
+        <div class="field-label-row">
+          <span class="field-label">О тебе в тексте</span>
+          <span class="field-note">это влияет только на слова</span>
+        </div>
+        <div class="segmented" id="gender-group">
+          <button data-gender="m" class="seg active">он</button>
+          <button data-gender="f" class="seg">она</button>
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">Цвет кожи</span>
+          <div class="swatches" id="skin-swatches"></div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Волосы</span>
+          <div class="swatches" id="hair-swatches"></div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Причёска</span>
+          <div class="choice-row" id="hairstyle-group">
+            <button data-hair="short" class="chip active">Короткие</button>
+            <button data-hair="bob" class="chip">Каре</button>
+            <button data-hair="curls" class="chip">Кудри</button>
+            <button data-hair="pony" class="chip">Хвост</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Одежда</span>
+          <div class="swatches" id="shirt-swatches"></div>
+          <div class="swatches small" id="pants-swatches"></div>
+        </div>
+
+        <div class="field-label-row dream-row">
+          <span class="field-label">Твоя мечта</span>
+          <span class="field-note">мама выберет другое</span>
+        </div>
+        <div class="dream-grid" id="dream-cards"></div>
+
+        <div class="creator-actions">
+          <button id="start-btn" class="btn btn-primary btn-wide">Начать историю <span class="btn-arrow">▸</span></button>
+        </div>
+      </div>
+      <div class="creator-hint">
+        <span id="creator-hint-text" class="drag-hint">↻ поверни мышью</span>
+      </div>
+    </section>
+
+    <!-- Chapter intro -->
+    <div id="chapter-card" class="chapter-card hidden">
+      <div class="chapter-card-inner">
+        <div class="chapter-kicker">глава <span id="cc-number">1</span></div>
+        <h2 id="cc-title">Свой угол</h2>
+        <p id="cc-sub">Дом. Вечер. Всё как всегда.</p>
+        <div class="chapter-line"></div>
+        <p id="cc-location" class="chapter-location">Квартира · твоя комната</p>
+      </div>
+    </div>
+
+    <!-- Story UI -->
+    <div id="story-ui" class="story-ui hidden">
+      <div id="dialogue" class="dialogue">
+        <div class="dialogue-head">
+          <span id="speaker" class="speaker"></span>
+          <span id="dialogue-hint" class="dialogue-hint">пробел / клик <b>▸</b></span>
+        </div>
+        <p id="dialogue-text" class="dialogue-text"></p>
+      </div>
+      <div id="choices" class="choices"></div>
+      <div id="montage-bar" class="montage-bar hidden">
+        <div class="montage-info">
+          <span class="montage-kicker">Три вечера</span>
+          <span id="montage-counter" class="montage-counter">0 / 3</span>
+        </div>
+        <div class="montage-progress"><span id="montage-progress-fill"></span></div>
+        <button id="montage-confirm" class="btn btn-primary" disabled>Прожить неделю <span class="btn-arrow">▸</span></button>
+      </div>
+    </div>
+
+    <!-- Interaction -->
+    <div id="interact" class="interact hidden">
+      <kbd>E</kbd><span id="interact-label">осмотреть</span>
+    </div>
+
+    <!-- Memory -->
+    <aside id="memory" class="memory hidden" aria-live="polite">
+      <button id="memory-close" class="memory-close" aria-label="Закрыть">×</button>
+      <div class="memory-kicker">воспоминание</div>
+      <h3 id="memory-title">Стол</h3>
+      <div id="memory-body" class="memory-body"></div>
+      <div id="memory-effects" class="memory-effects"></div>
+    </aside>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+
+    <!-- Ending -->
+    <section id="ending-screen" class="screen ending-screen hidden">
+      <div class="ending-scroll">
+        <div class="ending-topline">
+          <span class="ending-kicker">концовка <span id="ending-number">1</span> из <span id="ending-total">8</span></span>
+          <span id="ending-mood" class="ending-mood">тёплая</span>
+        </div>
+        <h2 id="ending-title" class="ending-title">Тот самый университет</h2>
+        <p id="ending-tag" class="ending-tag">твой выбор · твой дом</p>
+        <div class="ending-rule"></div>
+        <div id="ending-body" class="ending-body"></div>
+        <div class="ending-bottom">
+          <div class="ending-stats-wrap">
+            <span class="ending-stats-label">чем запомнилась эта жизнь</span>
+            <div id="ending-stats" class="ending-stats"></div>
+          </div>
+          <div class="ending-actions">
+            <button id="ending-again" class="btn btn-primary">Ещё одна жизнь <span class="btn-arrow">▸</span></button>
+            <button id="ending-gallery" class="btn btn-ghost">Галерея концовок</button>
+            <button id="ending-title-btn" class="btn btn-ghost">В главное меню</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gallery -->
+    <section id="gallery" class="screen gallery hidden">
+      <div class="gallery-inner">
+        <div class="gallery-head">
+          <button id="gallery-close" class="back-btn">← Назад</button>
+          <div>
+            <p class="eyebrow">все пути</p>
+            <h2>Галерея концовок</h2>
+          </div>
+          <div id="gallery-progress" class="gallery-progress">0 / 8</div>
+        </div>
+        <p class="gallery-lead">Каждый выбор оставляет след. Некоторые двери открываются только со второго раза.</p>
+        <div id="gallery-grid" class="gallery-grid"></div>
+      </div>
+    </section>
+
+    <!-- Pause -->
+    <div id="pause" class="modal hidden">
+      <div class="modal-card">
+        <p class="eyebrow">пауза</p>
+        <h2>Перерыв</h2>
+        <div class="pause-actions">
+          <button id="pause-resume" class="btn btn-primary">Продолжить</button>
+          <button id="pause-sound" class="btn btn-ghost">Звук: включён</button>
+          <button id="pause-menu" class="btn btn-ghost">В главное меню</button>
+          <button id="pause-restart" class="btn btn-ghost danger">Начать заново</button>
+        </div>
+        <div class="controls-help">
+          <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>идти</span></div>
+          <div><span class="mouse-icon"></span><span>вращать камеру · колесо — приблизить</span></div>
+          <div><kbd>E</kbd><span>рассмотреть · <kbd>Пробел</kbd> дальше</span></div>
+          <div><kbd>1</kbd>–<kbd>4</kbd><span>выбрать вариант</span></div>
+          <div><kbd>Esc</kbd><span>пауза</span></div>
+        </div>
+        <div class="touch-help">тап по полу — идти<br />потяни по сцене — камера<br />✦ — осмотреть предмет</div>
+        <p class="pause-note">Игра сохраняется автоматически после каждого выбора.</p>
+      </div>
+    </div>
+
+    <div id="confirm" class="modal hidden">
+      <div class="modal-card small">
+        <p class="eyebrow">осторожно</p>
+        <h2>Начать заново?</h2>
+        <p class="confirm-text">Текущая жизнь и весь прогресс исчезнут. Открытые концовки останутся в галерее.</p>
+        <div class="confirm-actions">
+          <button id="confirm-yes" class="btn btn-danger">Да, заново</button>
+          <button id="confirm-no" class="btn btn-ghost">Отмена</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="fade" class="fade"></div>
+    <button id="sound-float" class="icon-btn sound-float" aria-label="Переключить звук" title="Звук">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h3.5L12 5v14l-4.5-4H4z"/><path class="wave" d="M15 9.2c1.1 1.5 1.1 4.1 0 5.6M17.6 6.8c2.3 2.8 2.3 7.6 0 10.4"/><path class="slash" d="M4 4l16 16"/></svg>
+    </button>
+    <div id="hint" class="hint hidden">
+      <span><b>WASD</b> идти</span><span><b>мышь</b> камера</span><span><b>E</b> осмотреть</span><span><b>Пробел</b> дальше</span>
+    </div>
+    <div id="boot" class="boot"><div class="boot-mark">Ф</div><div class="boot-text">собираем кубики…</div></div>
+    <div id="error-box" class="error-box hidden"></div>
+  </div>
+
+  <noscript><p class="noscript">Для игры нужен JavaScript.</p></noscript>
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
